@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+# media-service-demo
+#
+# Copyright (C) 2012 Intel Corporation. All rights reserved.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms and conditions of the GNU Lesser General Public License,
+# version 2.1, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Mark Ryan <mark.d.ryan@intel.com>
+#
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+import glib
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+
+from msd.msd_main_window import *
+
+if __name__ == "__main__":
+    gtk.gdk.threads_init()
+    try:
+        del os.environ["http_proxy"];
+    except Exception, e:
+        pass
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    state = State()
+    main_window = MainWindow(state)
+    gtk.main()

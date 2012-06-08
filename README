@@ -1,0 +1,38 @@
+Introduction:
+-------------
+
+Media-service-demo is a Digital Media Player written in python to
+demonstrate how to use the media-service-upnp APIs.  It detects
+Digital Media Servers on the local area network, and allows users to
+browse, search and play their contents.
+
+Compilation:
+------------
+
+Media-service-demo has a number of pre-requisites, notably
+media-service-upnp, to identify and browse Digital Media Servers, and
+GStreamer to play audio and video content.
+
+Media-service-upnp can be downloaded from
+git://github.com/01org/media-service-upnp.git.  Please follow the
+instructions in the README document to compile and install this
+component.
+
+GStreamer can be installed using the package management systems of
+your Linux distribution.  You may need to install the various plugins
+to ensure that your media plays correctly.
+
+The source can be downloaded from github as follows:
+
+git clone git://github.com/01org/media-service-upnp.git
+
+Media-service-demo can be run directly from the source repository
+simply by typing.
+
+src/media-service-upnp
+
+It can be installed on your system via the supplied setup.py script.
+
+sudo ./setup.py install
+
+
