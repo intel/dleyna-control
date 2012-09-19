@@ -58,7 +58,8 @@ class SearchModel(gtk.GenericTreeModel):
                     if images or videos:
                         q_buffer.write(' or ')
                     q_buffer.write('Type derivedfrom "audio" ')
-                q_buffer.write(' )')
+                q_buffer.write(' ) and ( RefPath exists false )')
+
                 search_string = q_buffer.getvalue()
             finally:
                 q_buffer.close()
