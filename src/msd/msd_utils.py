@@ -31,7 +31,7 @@ def image_from_file(url):
     image = None
     try:
         with tmpfile:
-            message = urllib2.urlopen(url, None, 1)
+            message = urllib2.urlopen(url, None, 15)
             tmpfile.write(message.read())
         image = gtk.Image()
         image.set_from_file(tmpfile.name)
