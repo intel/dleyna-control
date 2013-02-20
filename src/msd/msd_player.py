@@ -147,7 +147,9 @@ class GStreamerWindow(PlayWindowBase):
             pos = self.player.query_position(gst.FORMAT_TIME, None)[0]
             if pos != -1:
                 pos = pos / 1000000000.0
+                self.__adjustment.handler_block_by_func(self.__adjusted)
                 self.__adjustment.set_value(pos)
+                self.__adjustment.handler_unblock_by_func(self.__adjusted)
         except Exception:
             pass
         return True
@@ -160,13 +162,12 @@ class GStreamerWindow(PlayWindowBase):
         PlayWindowBase.quit(self, button)
 
     def __seek (self, position):
-        self.player.seek_simple(gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH,
-                                position)
+        self.player.seek(1.0, gst.FORMAT_TIME, gst.SEEK_FLAG_FLUSH,
+                         gst.SEEK_TYPE_SET, position,
+                         gst.SEEK_TYPE_NONE, -1.0)
 
     def __adjusted(self, adjustment):
-        (ret, state, pending) = self.player.get_state()
-        if state != gst.STATE_PLAYING:
-            self.__seek(adjustment.get_value() * 1000000000)
+        self.__seek(adjustment.get_value() * 1000000000.0)
 
     def __format_time(self, scale, value):
         pos = int(self.__adjustment.get_value())
@@ -188,7 +189,6 @@ class GStreamerWindow(PlayWindowBase):
                                                       self.__duration,
                                                       .5, .5, 0)
                    self.__scale.set_adjustment(self.__adjustment)
-                   self.__scale.set_sensitive(False)
                    self.__adjustment.connect("value-changed",
                                              self.__adjusted)
                    self.__scale.connect("format-value", self.__format_time)
@@ -199,7 +199,6 @@ class GStreamerWindow(PlayWindowBase):
         if self.__state == gst.STATE_PLAYING:
             self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PAUSE,
                                                    gtk.ICON_SIZE_BUTTON)
-            self.__scale.set_sensitive(False)
             if self.__update_pos_id == 0:
                 self.__update_pos_id = glib.timeout_add(500,
                                                         self.__update_pos,
@@ -207,7 +206,6 @@ class GStreamerWindow(PlayWindowBase):
         else:
             self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PLAY,
                                                    gtk.ICON_SIZE_BUTTON)
-            self.__scale.set_sensitive(True)
             if self.__update_pos_id != 0:
                 glib.source_remove(self.__update_pos_id)
                 self.__update_pos_id = 0
