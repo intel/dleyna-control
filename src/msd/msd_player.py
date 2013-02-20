@@ -133,23 +133,14 @@ class GStreamerWindow(PlayWindowBase):
         self.__duration = -1
         self.__update_pos_id = 0
         self.__adjustment = None
+        self.__state = gst.STATE_NULL
         self.player.set_state(gst.STATE_PLAYING)
 
     def __play_pause(self, button):
-        if (self.player.get_state()[1] == gst.STATE_PLAYING):
+        if (self.__state == gst.STATE_PLAYING):
             self.player.set_state(gst.STATE_PAUSED)
-            self.__play_pause_image.set_from_stock (gtk.STOCK_MEDIA_PLAY,
-                                                    gtk.ICON_SIZE_BUTTON)
-            self.__scale.set_sensitive(True)
-            if self.__update_pos_id != 0:
-                glib.source_remove(self.__update_pos_id)
-                self.__update_pos_id = 0
         else:
             self.player.set_state(gst.STATE_PLAYING)
-            self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PAUSE,
-                                                   gtk.ICON_SIZE_BUTTON)
-
-            self.__scale.set_sensitive(False)
 
     def __update_pos(self, user_data=None):
         try:
@@ -181,35 +172,53 @@ class GStreamerWindow(PlayWindowBase):
         pos = int(self.__adjustment.get_value())
         return str(datetime.timedelta(seconds=pos))
 
+    def __update_ui(self, state):
+        if self.__state == state:
+            return
+        self.__state = state
+
+        if self.__duration == -1 and (self.__state == gst.STATE_PLAYING or
+                                      self.__state == gst.STATE_PAUSED):
+           try:
+               duration = self.player.query_duration(gst.FORMAT_TIME,
+                                    None)[0]
+               if duration != -1:
+                   self.__duration  = duration / 1000000000
+                   self.__adjustment = gtk.Adjustment(0, 0,
+                                                      self.__duration,
+                                                      .5, .5, 0)
+                   self.__scale.set_adjustment(self.__adjustment)
+                   self.__scale.set_sensitive(False)
+                   self.__adjustment.connect("value-changed",
+                                             self.__adjusted)
+                   self.__scale.connect("format-value", self.__format_time)
+                   self.__scale.show()
+           except Exception:
+               pass
+
+        if self.__state == gst.STATE_PLAYING:
+            self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PAUSE,
+                                                   gtk.ICON_SIZE_BUTTON)
+            self.__scale.set_sensitive(False)
+            if self.__update_pos_id == 0:
+                self.__update_pos_id = glib.timeout_add(500,
+                                                        self.__update_pos,
+                                                        None)
+        else:
+            self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PLAY,
+                                                   gtk.ICON_SIZE_BUTTON)
+            self.__scale.set_sensitive(True)
+            if self.__update_pos_id != 0:
+                glib.source_remove(self.__update_pos_id)
+                self.__update_pos_id = 0
+
     def gs_message_cb(self, bus, message):
         if message.type == gst.MESSAGE_EOS or message.type == gst.MESSAGE_ERROR:
             self.__seek(0)
             self.player.set_state(gst.STATE_PAUSED)
         elif message.type == gst.MESSAGE_STATE_CHANGED:
             (old, state, pending) =  message.parse_state_changed()
-            if self.__duration == -1 and (state == gst.STATE_PLAYING or
-                                          state == gst.STATE_PAUSED):
-               try:
-                   duration = self.player.query_duration(gst.FORMAT_TIME,
-                                        None)[0]
-                   if duration != -1:
-                       self.__duration  = duration / 1000000000
-                       self.__adjustment = gtk.Adjustment(0, 0,
-                                                          self.__duration,
-                                                          .5, .5, 0)
-                       self.__scale.set_adjustment(self.__adjustment)
-                       self.__scale.set_sensitive(False)
-                       self.__adjustment.connect("value-changed",
-                                                 self.__adjusted)
-                       self.__scale.connect("format-value", self.__format_time)
-                       self.__scale.show()
-               except Exception:
-                   pass
-
-            if state == gst.STATE_PLAYING and self.__update_pos_id == 0:
-                self.__update_pos_id = glib.timeout_add(500,
-                                                        self.__update_pos,
-                                                        None)
+            self.__update_ui (state)
         elif message.type == gst.MESSAGE_ASYNC_DONE:
             self.__update_pos()
 
