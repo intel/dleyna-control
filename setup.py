@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# media-service-demo
+# dleyna-control
 #
 # Copyright (C) 2012 Intel Corporation. All rights reserved.
 #
@@ -31,12 +31,12 @@ class MSDInstallData(install_data):
 
 setup(name = "msd",
       version = "0.0.1",
-      description = "Test DMP to demonstrate features of media-service-upnp",
+      description = "Test DMP to demonstrate features of dleyna-server",
       author = "Mark Ryan",
       author_email = "mark.d.ryan@intel.com",
       url = "https://01.org/dleyna/about",
       license = "http://www.gnu.org/licenses/lgpl-2.1.html",
-      scripts = ['src/media-service-demo.py'],
+      scripts = ['src/dleyna-control.py'],
       package_dir={'msd': 'src/msd'},
       packages = [ "msd" ],
       data_files = [ ("msd" , ["AUTHORS", "README", "ChangeLog", "COPYING"]) ],
