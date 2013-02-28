@@ -122,17 +122,41 @@ class MainWindow(object):
         self.__sort_order.set_sort_by(sort_by)
         tv = column.get_tree_view()
         model = tv.get_model()
-        model.flush()
+
+        # remove the model first to avoid handling lots of useless signals
         tv.set_model(None)
+        model.flush()
         tv.set_model(model)
 
-    def __create_column(self, treeview, name, col, width, sort_by):
+    def __cell_data_func(self, column, cell, model, tree_iter):
+        # Only search model supports set_request_range at the moment
+        if self.__search_view.get_model() == model:
+            path = model.get_path (tree_iter)
+
+            # This could be a lot smarter: should fetch data so that
+            # there's always at least 1 visible_range preloaded:
+            # that way e.g. pressing PgDn would not show "Loading"
+
+            if (path[0] >= self.__requested_range[0] and
+                path[0] <= self.__requested_range[1]):
+                return
+
+            visible_range = self.__search_view.get_visible_range()
+            if (visible_range):
+                visible_count = visible_range[1][0] - visible_range[0][0]
+                self.__requested_range = [max(0, visible_range[0][0] - visible_count // 2),
+                                          min(len(model) - 1, visible_range[1][0] + visible_count // 2)]
+                model.set_request_range(self.__requested_range[0],
+                                        self.__requested_range[1])
+
+    def __create_column(self, treeview, name, col, width, sort_by, cell_data_func=None):
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn(name, renderer)
         column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         column.set_fixed_width(width)
         column.add_attribute(renderer, 'text', col)
         column.connect("clicked", self.__column_clicked, sort_by)
+        column.set_cell_data_func(renderer, cell_data_func);
         treeview.append_column(column)
 
     def __close_overlay(self):
@@ -192,7 +216,7 @@ class MainWindow(object):
         treeview.set_headers_visible(True)
         treeview.set_fixed_height_mode(True)
 
-        self.__create_column(treeview, "Title", 0, 300, "DisplayName")
+        self.__create_column(treeview, "Title", 0, 300, "DisplayName", self.__cell_data_func)
         self.__create_column(treeview, "Date", 2, 100, "Date")
         self.__create_column(treeview, "Type", 3, 75, "Type")
         self.__create_column(treeview, "Author", 1, 100, "Artist")
@@ -313,6 +337,7 @@ class MainWindow(object):
         self.__create_window()
         self.__overlay = None
         self.__sort_order = SortOrder()
+        self.__requested_range = [0,0]
 
         liststore = self.__server_view.get_model()
         rowref = liststore.get_iter_first()
