@@ -41,9 +41,11 @@ class Container(MediaObject):
         self.__containerIF = dbus.Interface(obj,
                                             'org.gnome.UPnP.MediaContainer2')
 
-    def search(self, query, offset, count, fltr, sort=""):
+    def search(self, query, offset, count, fltr, sort="", on_reply=None, on_error=None):
         return self.__containerIF.SearchObjectsEx(query, offset, count, fltr,
-                                                  sort)
+                                                  sort,
+                                                  reply_handler=on_reply,
+                                                  error_handler=on_error)
 
     def list_children(self, offset, count, fltr, sort=""):
         return self.__containerIF.ListChildrenEx(offset, count, fltr, sort)
