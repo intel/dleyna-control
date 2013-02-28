@@ -1,4 +1,4 @@
-# media-service-demo
+# dleyna-control
 #
 # Copyright (C) 2012 Intel Corporation. All rights reserved.
 #
@@ -22,12 +22,13 @@ from msd_utils import *
 import dbus
 import os
 
+DLEYNA_SERVER_DBUS_NAME = 'com.intel.dleyna-server'
+
 class MediaObject(object):
 
     def __init__(self, path):
-        bus = dbus.SessionBus()
-        self.__propsIF = dbus.Interface(bus.get_object(
-                'com.intel.media-service-upnp', path),
+        obj = dbus.SessionBus().get_object(DLEYNA_SERVER_DBUS_NAME, path)
+        self.__propsIF = dbus.Interface(obj,
                                         'org.freedesktop.DBus.Properties')
     def get_prop(self, prop_name, iface = ""):
         return self.__propsIF.Get(iface, prop_name)
@@ -36,10 +37,9 @@ class Container(MediaObject):
 
     def __init__(self, path):
         MediaObject.__init__(self, path)
-        bus = dbus.SessionBus()
-        self.__containerIF = dbus.Interface(bus.get_object(
-                'com.intel.media-service-upnp', path),
-                                        'org.gnome.UPnP.MediaContainer2')
+        obj = dbus.SessionBus().get_object(DLEYNA_SERVER_DBUS_NAME, path)
+        self.__containerIF = dbus.Interface(obj,
+                                            'org.gnome.UPnP.MediaContainer2')
 
     def search(self, query, offset, count, fltr, sort=""):
         return self.__containerIF.SearchObjectsEx(query, offset, count, fltr,
@@ -86,11 +86,10 @@ class State(object):
                 self.__lost_server_cb(path)
 
     def __init__(self):
-        bus = dbus.SessionBus()
-        self.__manager = dbus.Interface(bus.get_object(
-                'com.intel.media-service-upnp',
-                '/com/intel/MediaServiceUPnP'),
-                                        'com.intel.MediaServiceUPnP.Manager')
+        obj = dbus.SessionBus().get_object(DLEYNA_SERVER_DBUS_NAME,
+                                           '/com/intel/dLeynaServer')
+        self.__manager = dbus.Interface(obj,
+                                        'com.intel.dLeynaServer.Manager')
         self.__servers = {}
         self.__found_server_cb = None
         self.__lost_server_cb = None
