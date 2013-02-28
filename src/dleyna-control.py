@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# media-service-demo
+# dleyna-control
 #
 # Copyright (C) 2012 Intel Corporation. All rights reserved.
 #
