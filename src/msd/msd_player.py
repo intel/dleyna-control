@@ -112,7 +112,10 @@ class GStreamerWindow(PlayWindowBase):
 
         self.player.set_property("uri", url)
 
-        button_bar = gtk.HBox(True, 0)
+        button_bar = gtk.HBox(False, 6)
+
+        align = gtk.Alignment(0.5, 0.5, 0.0, 0.0)
+        button_bar.pack_start(align, False, False, 0)
 
         self.__play_pause_button = gtk.Button()
         self.__play_pause_button.connect("clicked", self.__play_pause)
@@ -120,6 +123,7 @@ class GStreamerWindow(PlayWindowBase):
         self.__play_pause_image.set_from_stock(gtk.STOCK_MEDIA_PAUSE,
                                                gtk.ICON_SIZE_BUTTON)
         self.__play_pause_button.add(self.__play_pause_image)
+        align.add(self.__play_pause_button)
 
         self.__scale = gtk.HScale()
         self.__adjustment = gtk.Adjustment(0, 0, 0,
@@ -127,10 +131,8 @@ class GStreamerWindow(PlayWindowBase):
         self.__adjustment.connect("value-changed", self.__adjusted)
         self.__scale.set_adjustment(self.__adjustment)
         self.__scale.connect("format-value", self.__format_time)
+        button_bar.pack_end(self.__scale, True, True, 0)
 
-        button_bar.pack_start(self.__play_pause_button, True, False, 0)
-
-        self.private_area.pack_start(self.__scale, False, False, 0)
         self.private_area.pack_start(button_bar, False, False, 0)
 
         self.get_container().show_all()
