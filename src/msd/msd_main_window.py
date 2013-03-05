@@ -165,10 +165,10 @@ class MainWindow(object):
     def __content_clicked(self, treeview, path, col):
         model = treeview.get_model()
         rowref = model.get_iter(path)
-        name = model.get_value(rowref, 0)
-        ctype = model.get_value(rowref, 3)
-        path = model.get_value(rowref, 4)
-        url = model.get_value(rowref, 5)
+        name = model.get_value(rowref, model.COL_DISPLAY_NAME)
+        ctype = model.get_value(rowref, model.COL_TYPE)
+        path = model.get_value(rowref, model.COL_PATH)
+        url = model.get_value(rowref, model.COL_URL)
 
         if url != "":
             if ctype == "Image":

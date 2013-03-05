@@ -91,9 +91,15 @@ class _ResultArray(dict):
 
 
 class GenericModel(gtk.GenericTreeModel):
-    columns = (("DisplayName", str), ("Artist", str), ("Date", str),
-               ("Type",str), ("Path", str), ("URL", str),
-               ("Loaded", bool))
+    # columns
+    COL_DISPLAY_NAME = 0
+    COL_ARTIST = 1
+    COL_DATE = 2
+    COL_TYPE = 3
+    COL_PATH = 4
+    COL_URL = 5
+    COL_LOADED = 6
+    column_types = [str, str, str, str, str, str, bool]
 
     filter = ["Artist", "DisplayName", "URLs", "Date", "Path", "Type"]
 
@@ -207,9 +213,9 @@ class GenericModel(gtk.GenericTreeModel):
         self.__request_range = [start, end]
         # skip any rows in beginning or end that are already loaded
         try:
-            while self.__items[start][6] and start <= end:
+            while self.__items[start][self.COL_LOADED] and start <= end:
                 start = start + 1
-            while self.__items[end][6] and start <= end:
+            while self.__items[end][self.COL_LOADED] and start <= end:
                 end = end - 1
         except:
             pass
@@ -231,10 +237,10 @@ class GenericModel(gtk.GenericTreeModel):
         return gtk.TREE_MODEL_LIST_ONLY
 
     def on_get_n_columns(self):
-        return len(GenericModel.columns)
+        return len(self.column_types)
 
     def on_get_column_type(self, n):
-        return GenericModel.columns[n][1]
+        return self.column_types[n]
 
     def on_get_iter(self, path):
         # return internal row reference (key) for use in on_* methods
