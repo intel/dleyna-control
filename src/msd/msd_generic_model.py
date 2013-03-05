@@ -156,7 +156,10 @@ class GenericModel(gtk.GenericTreeModel):
             return
 
         # should we stop fetching now?
-        if len(items) == 0 or self.__result_count >= self.__request_count:
+        if (len(items) == 0 or
+            self.__result_count >= self.__request_count or
+            (max_items > 0 and self.__result_count >= max_items)):
+
             self.__fetch_in_progress = False
             if max_items == 0 and self.__result_count >= self.__request_count:
                 print "max_items not known, may have more rows available..."
