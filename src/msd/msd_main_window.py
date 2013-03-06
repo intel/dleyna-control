@@ -128,13 +128,16 @@ class MainWindow(object):
 
     def __cell_data_func(self, column, cell, model, tree_iter):
         path = model.get_path (tree_iter)
+        requested_range = model.get_request_range()
 
         # This could be a lot smarter: should fetch data so that
         # there's always at least 1 visible_range preloaded:
         # that way e.g. pressing PgDn would not show "Loading"
-        requested_range = model.get_request_range()
+
+        # try to exit early, but note that some models do not know
+        # the final item count, so path[0] is never larger than range
         if (path[0] >= requested_range[0] and
-            path[0] <= requested_range[1]):
+            (path[0] <= requested_range[1] and model.length_is_known())):
             return
 
         if self.__notebook.get_current_page() == 0:
@@ -146,7 +149,7 @@ class MainWindow(object):
             visible_count = visible_range[1][0] - visible_range[0][0]
             start = visible_range[0][0] - visible_count // 2
             end = visible_range[1][0] + visible_count // 2
-            model.set_request_range(max(0, start), min(len(model) - 1, end))
+            model.set_request_range(max(0, start), end)
 
     def __create_column(self, treeview, name, col, width, sort_by, cell_data_func=None):
         renderer = gtk.CellRendererText()
