@@ -72,11 +72,11 @@ class SearchResultArray(dict):
 
     def set_length(self, length):
         if length > self.__length:
-            for key in range(self.__length, length):
+            for key in xrange(self.__length, length):
                 self.__length = key + 1
                 self.__on_inserted(key)
         elif length < self.__length:
-            for key in range(self.__length - 1, length - 1, -1):
+            for key in xrange(self.__length - 1, length - 1, -1):
                 try:
                     del self[key]
                 except:
