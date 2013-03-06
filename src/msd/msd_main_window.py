@@ -73,10 +73,8 @@ class MainWindow(object):
                     self.__search_view.set_model(search_model)
                     self.__search_path = path
             elif self.__browse_path != path:
-                props = { "Path" : path, "Type": "container" }
-                self.__browse_tree = TreeNode(props, None, self.__sort_order)
-                browse_model = BrowseModel(self.__browse_tree)
-                self.__browse_node = self.__browse_tree
+                browse_model = BrowseModel(Container(path),
+                                           self.__sort_order)
                 self.__browse_view.set_model(browse_model)
                 self.__browse_path = path
 
@@ -129,23 +127,26 @@ class MainWindow(object):
         tv.set_model(model)
 
     def __cell_data_func(self, column, cell, model, tree_iter):
-        # Only search model supports set_request_range at the moment
-        if self.__search_view.get_model() == model:
-            path = model.get_path (tree_iter)
+        path = model.get_path (tree_iter)
 
-            # This could be a lot smarter: should fetch data so that
-            # there's always at least 1 visible_range preloaded:
-            # that way e.g. pressing PgDn would not show "Loading"
-            requested_range = model.get_request_range()
-            if (path[0] >= requested_range[0] and
-                path[0] <= requested_range[1]):
-                return
+        # This could be a lot smarter: should fetch data so that
+        # there's always at least 1 visible_range preloaded:
+        # that way e.g. pressing PgDn would not show "Loading"
+        requested_range = model.get_request_range()
+        if (path[0] >= requested_range[0] and
+            path[0] <= requested_range[1]):
+            return
 
+        if self.__notebook.get_current_page() == 0:
             visible_range = self.__search_view.get_visible_range()
-            if (visible_range):
-                visible_count = visible_range[1][0] - visible_range[0][0]
-                model.set_request_range(max(0, visible_range[0][0] - visible_count // 2),
-                                        min(len(model) - 1, visible_range[1][0] + visible_count // 2))
+        else:
+            visible_range = self.__browse_view.get_visible_range()
+
+        if (visible_range):
+            visible_count = visible_range[1][0] - visible_range[0][0]
+            start = visible_range[0][0] - visible_count // 2
+            end = visible_range[1][0] + visible_count // 2
+            model.set_request_range(max(0, start), min(len(model) - 1, end))
 
     def __create_column(self, treeview, name, col, width, sort_by, cell_data_func=None):
         renderer = gtk.CellRendererText()
@@ -170,7 +171,13 @@ class MainWindow(object):
         path = model.get_value(rowref, model.COL_PATH)
         url = model.get_value(rowref, model.COL_URL)
 
-        if url != "":
+        if (ctype == "Container"):
+            if self.__notebook.get_current_page() == 1:
+                browse_model = BrowseModel(Container(path),
+                                           self.__sort_order)
+                self.__browse_path = path
+                self.__browse_view.set_model(browse_model)
+        elif url != "":
             if ctype == "Image":
                 self.__window.remove(self.__main_view)
                 self.__overlay = PlayWindowImage(name, url,
@@ -190,24 +197,6 @@ class MainWindow(object):
                 self.__overlay = PlayWindowAudio(name, url, album_art_url,
                                                  self.__close_overlay)
                 self.__window.add(self.__overlay.get_container())
-
-    def __browse_content_clicked(self, treeview, path, col):
-        if self.__browse_node != self.__browse_tree and path[0] == 0:
-            self.__browse_node.reset_children()
-            self.__browse_node = self.__browse_node.get_parent()
-            browse_model = BrowseModel(self.__browse_node)
-            self.__browse_view.set_model(browse_model)
-        else:
-            child = path[0]
-            if self.__browse_node != self.__browse_tree:
-                child = child - 1
-            node = self.__browse_node.get_child(child)
-            if node.is_container():
-                self.__browse_node = node
-                browse_model = BrowseModel(self.__browse_node)
-                self.__browse_view.set_model(browse_model)
-            else:
-                self.__content_clicked(treeview, path, col)
 
     def __create_common_list(self, store):
         treeview = gtk.TreeView(store)
@@ -230,7 +219,7 @@ class MainWindow(object):
     def __create_browse_view(self, notebook):
         tree_store = gtk.TreeStore(str, str, str, str)
         scrollwin, treeview = self.__create_common_list(tree_store)
-        treeview.connect("row-activated", self.__browse_content_clicked)
+        treeview.connect("row-activated", self.__content_clicked)
         self.__browse_view = treeview;
         notebook.append_page(scrollwin, gtk.Label("Browse"))
 
