@@ -24,7 +24,6 @@ pygtk.require('2.0')
 import gtk
 import cStringIO
 import dateutil.parser
-import datetime
 
 from msd_sort_order import *
 from msd_upnp import *
