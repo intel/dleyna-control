@@ -136,18 +136,16 @@ class MainWindow(object):
             # This could be a lot smarter: should fetch data so that
             # there's always at least 1 visible_range preloaded:
             # that way e.g. pressing PgDn would not show "Loading"
-
-            if (path[0] >= self.__requested_range[0] and
-                path[0] <= self.__requested_range[1]):
+            requested_range = model.get_request_range()
+            if (path[0] >= requested_range[0] and
+                path[0] <= requested_range[1]):
                 return
 
             visible_range = self.__search_view.get_visible_range()
             if (visible_range):
                 visible_count = visible_range[1][0] - visible_range[0][0]
-                self.__requested_range = [max(0, visible_range[0][0] - visible_count // 2),
-                                          min(len(model) - 1, visible_range[1][0] + visible_count // 2)]
-                model.set_request_range(self.__requested_range[0],
-                                        self.__requested_range[1])
+                model.set_request_range(max(0, visible_range[0][0] - visible_count // 2),
+                                        min(len(model) - 1, visible_range[1][0] + visible_count // 2))
 
     def __create_column(self, treeview, name, col, width, sort_by, cell_data_func=None):
         renderer = gtk.CellRendererText()
@@ -337,7 +335,6 @@ class MainWindow(object):
         self.__create_window()
         self.__overlay = None
         self.__sort_order = SortOrder()
-        self.__requested_range = [0,0]
 
         liststore = self.__server_view.get_model()
         rowref = liststore.get_iter_first()

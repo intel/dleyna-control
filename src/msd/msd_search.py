@@ -215,7 +215,11 @@ class SearchModel(gtk.GenericTreeModel):
         self.__request_count = count
         self.__get_search_items()
 
+    def get_request_range (self):
+        return self.__request_range
+
     def set_request_range (self, start, end):
+        self.__request_range = [start, end]
         # skip any rows in beginning or end that are already loaded
         try:
             while self.__items[start][6] and start <= end:
