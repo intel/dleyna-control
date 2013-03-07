@@ -197,7 +197,7 @@ class MainWindow(object):
                 self.__overlay = PlayWindowVideo(name, url,
                                                  self.__close_overlay)
                 self.__window.add(self.__overlay.get_container())
-            elif ctype == "Audio":
+            elif ctype == "Audio" or ctype == "Music":
                 try:
                     album_art_url = MediaObject(path).get_prop("AlbumArtURL")
                 except Exception:
