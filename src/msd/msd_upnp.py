@@ -47,8 +47,10 @@ class Container(MediaObject):
                                                   reply_handler=on_reply,
                                                   error_handler=on_error)
 
-    def list_children(self, offset, count, fltr, sort=""):
-        return self.__containerIF.ListChildrenEx(offset, count, fltr, sort)
+    def list_children(self, offset, count, fltr, sort="", on_reply=None, on_error=None):
+        return self.__containerIF.ListChildrenEx(offset, count, fltr, sort,
+                                                 reply_handler=on_reply,
+                                                 error_handler=on_error)
 
 class State(object):
 
