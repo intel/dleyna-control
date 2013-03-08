@@ -54,7 +54,7 @@ class MainWindow(object):
         name, url = value
 
         tree_iter = list_store.append([None, name, key])
-        PixbufAsyncLoader(url, self.__on_pixbuf_loaded, tree_iter)
+        PixbufAsyncLoader("", self.__on_pixbuf_loaded, tree_iter)
         return tree_iter
 
     def __create_server_list_store(self):

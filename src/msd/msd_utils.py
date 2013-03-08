@@ -23,6 +23,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import gio
+import gobject
 
 # loads a pixbuf from given url, calls callback() when pixbuf is ready
 class PixbufAsyncLoader():
@@ -35,7 +36,7 @@ class PixbufAsyncLoader():
             else:
                 self.__loader.close ()
                 self.__callback (self.__loader.get_pixbuf(), self.__userdata)
-        except:
+        except gobject.GError as err:
             print "Failed to load image: %s" % err.message
             pass
 
@@ -44,7 +45,7 @@ class PixbufAsyncLoader():
             stream = image_file.read_finish(result)
             stream.read_async(10000, self.__on_stream_read)
             self.__loader = gtk.gdk.PixbufLoader()
-        except Exception as err:
+        except gobject.GError as err:
             print "Failed to load image '%s': %s" % (image_file.get_uri(),
                                                      err.message)
             pass
