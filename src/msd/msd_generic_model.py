@@ -133,11 +133,9 @@ class GenericModel(gtk.GenericTreeModel):
         self.__static_items = 1
 
     def _on_reply(self, items, max_items):
-        # if server does not tell how many results there are, set
-        # a sensible minimum
-        if (max_items == 0):
-            self.__request_count = max(self.__request_count,
-                                       self.min_items_default)
+        n_items = len(items)
+        if max_items > 0:
+            self.__length_is_known = True
 
         # 'add' empty rows before actual results
         index = (self.__request_start +
@@ -154,9 +152,9 @@ class GenericModel(gtk.GenericTreeModel):
         if max_items != 0:
             self.__items.set_length(max_items + self.__static_items)
 
-        self.__result_count = self.__result_count + len(items)
+        self.__result_count = self.__result_count + n_items
         print ("%d rows fetched (%d/%d rows cached)"
-               % (len(items),
+               % (n_items,
                   self.__items.get_cached_item_count(),
                   len(self.__items)))
 
@@ -166,14 +164,13 @@ class GenericModel(gtk.GenericTreeModel):
             return
 
         # should we stop fetching now?
-        if (len(items) == 0 or
+        if (n_items == 0 or
             self.__result_count >= self.__request_count or
             (max_items > 0 and self.__result_count >= max_items)):
 
             self.__fetch_in_progress = False
-            if max_items == 0 and self.__result_count >= self.__request_count:
-                print "max_items not known, may have more rows available..."
-                self.__may_have_more_results = True
+            if n_items == 0:
+                self.__length_is_known = True
             return
 
         self.__do_fetch ()
@@ -191,13 +188,16 @@ class GenericModel(gtk.GenericTreeModel):
 
     def __start_fetch(self, start, count):
         self.__fetch_in_progress = True
-        self.__may_have_more_results = False
+        self.__length_is_known = False
         self.__result_count = 0
         self.__restart_start = 0
         self.__restart_count = 0
         self.__request_start = start
         self.__request_count = count
         self.__do_fetch()
+
+    def length_is_known(self):
+        return self.__length_is_known
 
     def __on_inserted (self, row):
         path = (row,)
@@ -218,13 +218,20 @@ class GenericModel(gtk.GenericTreeModel):
                                    on_changed = self.__on_changed,
                                    on_deleted = self.__on_deleted)
         self.__fetch_in_progress = False
+        self.__length_is_known = False
         self.__static_items = 0
+        self.__request_range = [-1, -1]
 
     def get_request_range (self):
         return self.__request_range
 
     def set_request_range (self, start, end):
+        if (start >= self.__request_range[0] and
+            end <= self.__request_range[1]):
+            return
+
         self.__request_range = [start, end]
+
         # skip any rows in beginning or end that are already loaded
         try:
             while self.__items[start + self.__static_items][self.COL_LOADED] and start <= end:
