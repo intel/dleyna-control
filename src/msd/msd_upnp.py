@@ -61,11 +61,10 @@ class State(object):
 
         try:
             icon_url = server.get_prop("IconURL");
-            image = image_from_file(icon_url)
         except Exception:
-            image = None
+            icon_url = None
 
-        return (folderName, image)
+        return (folderName, icon_url)
 
     def __init_servers(self):
         for i in self.__manager.GetServers():
