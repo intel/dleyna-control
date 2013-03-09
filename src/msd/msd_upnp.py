@@ -67,12 +67,15 @@ class State(object):
 
         return (folderName, image)
 
-    def __init_servers(self):
-        for i in self.__manager.GetServers():
+    def __on_get_servers_reply (self, servers):
+        for path in servers:
             try:
-                self.__servers[i] = State.__create_server_tuple(i)
-            except dbus.exceptions.DBusException:
+                self.__servers[path] = State.__create_server_tuple(path)
+            except Exception:
                 pass
+
+    def __on_get_servers_error (self, error):
+        print "Manager.GetServers() failed: %s" % error
 
     def found_server(self, path):
         if not path in self.__servers:
@@ -100,7 +103,8 @@ class State(object):
 
         self.__manager.connect_to_signal("FoundServer", self.found_server)
         self.__manager.connect_to_signal("LostServer", self.lost_server)
-        self.__init_servers()
+        self.__manager.GetServers(reply_handler=self.__on_get_servers_reply,
+                                  error_handler=self.__on_get_servers_error)
 
     def set_lost_server_cb(self, callback):
         self.__lost_server_cb = callback
