@@ -24,9 +24,10 @@
 #     def _fetch_items(self, start, count)
 # which needs to make sure _on_reply() or _on_error() is called.
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import sys
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import GLib, GObject, Gtk
 import dateutil.parser
 
 from msd_upnp import *
@@ -90,7 +91,7 @@ class _ResultArray(dict):
         return dict.__len__(self)
 
 
-class GenericModel(gtk.GenericTreeModel):
+class GenericModel(GObject.GObject, Gtk.TreeModel):
     # columns
     COL_DISPLAY_NAME = 0
     COL_ARTIST = 1
@@ -203,18 +204,20 @@ class GenericModel(gtk.GenericTreeModel):
         return self.__length_is_known
 
     def __on_inserted (self, row):
-        path = (row,)
+        path = Gtk.TreePath((row,))
         self.row_inserted (path, self.get_iter (path))
 
     def __on_changed (self, row):
-        path = (row,)
+        path = Gtk.TreePath((row,))
         self.row_changed (path, self.get_iter (path))
 
     def __on_deleted (self, row):
-        self.row_deleted ((row,))
+        self.row_deleted (Gtk.TreePath((row,)))
 
     def __init__(self):
-        gtk.GenericTreeModel.__init__(self)
+        GObject.GObject.__init__(self)
+
+        self.__stamp = GLib.random_int_range(-2147483648, 2147483647)
         empty_array = ["Loading...",None, None, None, None, False]
         self.__items = _ResultArray(empty_array,
                                    on_inserted = self.__on_inserted,
@@ -257,57 +260,71 @@ class GenericModel(gtk.GenericTreeModel):
         self.__items.set_length(0 + self.__static_items)
         self.set_request_range(0, GenericModel.max_items_per_fetch - 1)
 
-    def on_get_flags(self):
-        return gtk.TREE_MODEL_LIST_ONLY
+    def do_get_flags(self):
+        return Gtk.TreeModelFlags.LIST_ONLY
 
-    def on_get_n_columns(self):
+    def do_get_n_columns(self):
         return len(self.column_types)
 
-    def on_get_column_type(self, n):
+    def do_get_column_type(self, n):
         return self.column_types[n]
 
-    def on_get_iter(self, path):
-        # return internal row reference (key) for use in on_* methods
-        retval = None
+    def do_get_iter(self, path):
+        # return iterator for use in other do_* methods.
+        # user_data is the index of the refered row.
         if len(self.__items) > 0 and path[0] < len(self.__items):
-            retval = path[0]
-        return retval
+            tree_iter = Gtk.TreeIter()
+            tree_iter.stamp = self.__stamp
+            tree_iter.user_data = path[0]
+            return (True, tree_iter)
+        else:
+            return (False, None)
 
-    def on_get_path(self, rowref):
-        return (rowref, )
+    def do_get_path(self, tree_iter):
+        if tree_iter.user_data is None:
+            return Gtk.TreePath((None,))
+        return Gtk.TreePath((tree_iter.user_data,))
 
-    def on_get_value(self, rowref, col):
+    def do_get_value(self, tree_iter, col):
         try:
-            return self.__items[rowref][col]
+            if (col == self.COL_LOADED):
+                return bool(self.__items[tree_iter.user_data][col])
+            elif self.__items[tree_iter.user_data][col] == None:
+                return ""
+            else:
+                return self.__items[tree_iter.user_data][col].encode('utf-8')
         except KeyError:
             return None
 
-    def on_iter_next(self, rowref):
-        retval = None
-        if rowref + 1 < len(self.__items):
-            retval = rowref + 1
-        return retval
+    def do_iter_next(self, tree_iter):
+        length = len(self.__items)
+        if tree_iter.user_data is None and length > 0:
+            # return iter to first row
+            tree_iter.user_data = 0
+            return (True, tree_iter)
+        elif tree_iter.user_data < length - 1:
+            # return iter to next row
+            tree_iter.user_data += 1
+            return (True, tree_iter)
+        else:
+            return (False, None)
 
-    def on_iter_children(self, rowref):
-        retval = 0
-        if rowref:
-            retval =  None
-        return retval
-
-    def on_iter_has_child(self, rowref):
+    def do_iter_has_child(self, tree_iter):
         return False
 
-    def on_iter_n_children(self, rowref):
-        retval = 0
-        if not rowref:
-            retval = len(self.__items)
-        return retval
+    def do_iter_n_children(self, parent_iter):
+        if parent_iter is None:
+            # special case: return number of top level children
+            return len(self.__items)
+        return 0
 
-    def on_iter_nth_child(self, rowref, child):
-        retval = None
-        if not rowref and child < len(self.__items):
-            retval = child
-        return retval
+    def do_iter_nth_child(self, parent_iter, n):
+        if parent_iter != None or n >= len(self.__items):
+            return (False, None)
+        tree_iter = Gtk.TreeIter()
+        tree_iter.stamp = self.__stamp
+        tree_iter.user_data = n
+        return (True, tree_iter)
 
-    def on_iter_parent(self, child):
-        return None
+    def do_iter_parent(self, child_iter):
+        return (False, None)

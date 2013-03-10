@@ -18,10 +18,9 @@
 # Mark Ryan <mark.d.ryan@intel.com>
 #
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import glib
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gdk, GdkPixbuf, Gtk
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -43,17 +42,17 @@ class MainWindow(object):
     def destroy(self, widget, data=None):
         if self.__overlay:
             self.__overlay.cancel_playback()
-        gtk.main_quit()
+        Gtk.main_quit()
 
     def __append_server_list_row(self, list_store, key, value):
         name, image = value
         if image:
             image = image.get_pixbuf()
-            image = image.scale_simple(32, 32, gtk.gdk.INTERP_BILINEAR)
+            image = image.scale_simple(32, 32, GdkPixbuf.InterpType.BILINEAR)
         return list_store.append([image, name, key])
 
     def __create_server_list_store(self):
-        list_store = gtk.ListStore(gtk.gdk.Pixbuf, str, str)
+        list_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
         for key, value in self.__state.get_server_list().iteritems():
             self.__append_server_list_row(list_store, key, value)
         return list_store
@@ -92,16 +91,16 @@ class MainWindow(object):
 
     def __create_server_list(self, table):
         liststore = self.__create_server_list_store()
-        treeview = gtk.TreeView(liststore)
+        treeview = Gtk.TreeView(liststore)
         treeview.set_headers_visible(True)
 
-        column = gtk.TreeViewColumn()
+        column = Gtk.TreeViewColumn()
         column.set_title("Servers")
-        renderer = gtk.CellRendererPixbuf()
-        column.pack_start(renderer, expand=False)
+        renderer = Gtk.CellRendererPixbuf()
+        column.pack_start(renderer, False)
         column.add_attribute(renderer, 'pixbuf', 0)
-        renderer = gtk.CellRendererText()
-        column.pack_start(renderer, expand=False)
+        renderer = Gtk.CellRendererText()
+        column.pack_start(renderer, False)
         column.add_attribute(renderer, 'text', 1)
         treeview.append_column(column)
 
@@ -109,8 +108,8 @@ class MainWindow(object):
 
         treeview.get_selection().connect("changed", self.__server_selected)
 
-        scrollwin = gtk.ScrolledWindow()
-        scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC);
+        scrollwin = Gtk.ScrolledWindow()
+        scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
         scrollwin.add(treeview)
         table.attach(scrollwin, left_attach=0, right_attach=1,
                      top_attach=0, bottom_attach=1)
@@ -126,7 +125,7 @@ class MainWindow(object):
         model.flush()
         tv.set_model(model)
 
-    def __cell_data_func(self, column, cell, model, tree_iter):
+    def __cell_data_func(self, column, cell, model, tree_iter, userdata):
         path = model.get_path (tree_iter)
         requested_range = model.get_request_range()
 
@@ -152,9 +151,9 @@ class MainWindow(object):
             model.set_request_range(max(0, start), end)
 
     def __create_column(self, treeview, name, col, width, sort_by, cell_data_func=None):
-        renderer = gtk.CellRendererText()
-        column = gtk.TreeViewColumn(name, renderer)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        renderer = Gtk.CellRendererText()
+        column = Gtk.TreeViewColumn(name, renderer)
+        column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
         column.set_fixed_width(width)
         column.add_attribute(renderer, 'text', col)
         column.connect("clicked", self.__column_clicked, sort_by)
@@ -202,7 +201,7 @@ class MainWindow(object):
                 self.__window.add(self.__overlay.get_container())
 
     def __create_common_list(self, store):
-        treeview = gtk.TreeView(store)
+        treeview = Gtk.TreeView(store)
         treeview.set_headers_visible(True)
         treeview.set_fixed_height_mode(True)
 
@@ -214,20 +213,20 @@ class MainWindow(object):
         treeview.set_headers_clickable(True)
         treeview.set_rules_hint(True)
 
-        scrollwin = gtk.ScrolledWindow()
-        scrollwin.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC);
+        scrollwin = Gtk.ScrolledWindow()
+        scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC);
         scrollwin.add(treeview)
         return (scrollwin, treeview)
 
     def __create_browse_view(self, notebook):
-        tree_store = gtk.TreeStore(str, str, str, str)
+        tree_store = Gtk.TreeStore(str, str, str, str)
         scrollwin, treeview = self.__create_common_list(tree_store)
         treeview.connect("row-activated", self.__content_clicked)
         self.__browse_view = treeview;
-        notebook.append_page(scrollwin, gtk.Label("Browse"))
+        notebook.append_page(scrollwin, Gtk.Label(label="Browse"))
 
     def __create_search_list(self, container):
-        list_store = gtk.ListStore(str, str, str, str)
+        list_store = Gtk.ListStore(str, str, str, str)
         scrollwin, treeview = self.__create_common_list(list_store)
         container.pack_start(scrollwin, True, True, 0)
         treeview.connect("row-activated", self.__content_clicked)
@@ -238,15 +237,15 @@ class MainWindow(object):
         self.__server_selected(self.__server_view.get_selection())
 
     def __create_check_box(self, title, container):
-        cb = gtk.CheckButton(title)
+        cb = Gtk.CheckButton(title)
         cb.set_active(True)
         cb.connect("toggled", self.__search_criteria_changed)
         container.pack_start(cb, True, True, MainWindow.container_padding)
         return cb
 
     def __create_search_controls(self, container):
-        label = gtk.Label("Search: ")
-        self.__search_entry = gtk.Entry()
+        label = Gtk.Label(label="Search: ")
+        self.__search_entry = Gtk.Entry()
         self.__search_entry.set_text("")
         self.__search_entry.connect("activate", self.__search_criteria_changed)
         container.pack_start(label, True, True, MainWindow.container_padding)
@@ -257,12 +256,13 @@ class MainWindow(object):
         self.__videos = self.__create_check_box("Video", container)
 
     def __create_search_view(self, notebook):
-        vbox = gtk.VBox(False, 0)
-        hbox = gtk.HBox(True, 0)
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
+                       homogeneous=True)
         self.__create_search_list(vbox)
         self.__create_search_controls(hbox)
         vbox.pack_start(hbox, False, True, MainWindow.container_padding)
-        notebook.append_page(vbox, gtk.Label("Search"))
+        notebook.append_page(vbox, Gtk.Label(label="Search"))
 
     def __page_changed(self, notebook, page, page_number):
         sel = self.__server_view.get_selection()
@@ -270,7 +270,7 @@ class MainWindow(object):
             self.__change_server(page_number, sel)
 
     def __create_notebook(self, table):
-        notebook = gtk.Notebook()
+        notebook = Gtk.Notebook()
         self.__create_search_view(notebook)
         self.__create_browse_view(notebook)
         notebook.connect("switch-page", self.__page_changed)
@@ -279,14 +279,14 @@ class MainWindow(object):
         self.__notebook = notebook
 
     def __create_widgets(self, window):
-        table = gtk.Table(rows=1, columns=4, homogeneous=True)
+        table = Gtk.Table(rows=1, columns=4, homogeneous=True)
         self.__create_server_list(table)
         self.__create_notebook(table)
         window.add(table)
         self.__main_view = table
 
     def __create_window(self):
-        window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
         window.set_title("Media Service Demo")
         window.set_resizable(True)
         window.set_default_size(640, 480)
@@ -319,6 +319,7 @@ class MainWindow(object):
                     self.__server_view.set_cursor(liststore.get_path(rowref))
 
     def __init__(self, state):
+        self.__sort_order = SortOrder()
         self.__search_path = None
         self.__browse_path = None
         self.__state = state
@@ -326,8 +327,6 @@ class MainWindow(object):
         self.__state.set_found_server_cb(self.__found_server)
         self.__create_window()
         self.__overlay = None
-        self.__sort_order = SortOrder()
-
         liststore = self.__server_view.get_model()
         rowref = liststore.get_iter_first()
         if rowref:

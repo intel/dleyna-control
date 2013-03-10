@@ -19,9 +19,9 @@
 # Jussi Kukkonen <jussi.kukkonen@intel.com>
 #
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import cStringIO
 
 from msd_generic_model import *

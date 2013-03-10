@@ -19,9 +19,9 @@
 #
 
 import tempfile
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import urllib2
 import os
 
@@ -33,7 +33,7 @@ def image_from_file(url):
         with tmpfile:
             message = urllib2.urlopen(url, None, 15)
             tmpfile.write(message.read())
-        image = gtk.Image()
+        image = Gtk.Image()
         image.set_from_file(tmpfile.name)
     finally:
         os.unlink(tmpFileName)

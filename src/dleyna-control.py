@@ -20,10 +20,10 @@
 # Mark Ryan <mark.d.ryan@intel.com>
 #
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import glib
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gst', '1.0')
+from gi.repository import GObject, Gtk, Gst
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -31,7 +31,8 @@ import dbus.mainloop.glib
 from msd.msd_main_window import *
 
 if __name__ == "__main__":
-    gtk.gdk.threads_init()
+    GObject.threads_init()
+    Gst.init(None)
     try:
         del os.environ["http_proxy"];
     except Exception, e:
@@ -39,4 +40,4 @@ if __name__ == "__main__":
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     state = State()
     main_window = MainWindow(state)
-    gtk.main()
+    Gtk.main()
