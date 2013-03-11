@@ -52,20 +52,30 @@ class Container(MediaObject):
                                                  reply_handler=on_reply,
                                                  error_handler=on_error)
 
-class State(object):
-
-    @staticmethod
-    def __create_server_tuple(path):
+class Server (object):
+    def __init__(self, path):
         server = MediaObject(path)
-        folderName = server.get_prop("FriendlyName");
+
+        self.path = path
+        self.name = server.get_prop("FriendlyName");
 
         try:
             icon_url = server.get_prop("IconURL");
-            image = image_from_file(icon_url)
-        except Exception:
-            image = None
+            self.icon = image_from_file(icon_url);
+        except:
+            self.icon =  None
 
-        return (folderName, image)
+        try:
+            self.__sort_caps = server.get_prop("SortCaps");
+        except:
+            self.__sort_caps =  []
+        self.__sort_all = "*" in self.__sort_caps
+
+    def has_sort_capability (self, cap):
+        return self.__sort_all or cap in self.__sort_caps
+
+
+class State(object):
 
     def __on_get_servers_reply (self, servers):
         for path in servers:
@@ -77,7 +87,7 @@ class State(object):
     def __found_server(self, path):
         if not path in self.__servers:
             try:
-                self.__servers[path] = State.__create_server_tuple(path)
+                self.__servers[path] = Server(path)
                 if self.__found_server_cb:
                     self.__found_server_cb(path)
             finally:
