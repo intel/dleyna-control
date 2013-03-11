@@ -26,7 +26,7 @@ import gio
 import gobject
 
 # loads a pixbuf from given url, calls callback() when pixbuf is ready
-class PixbufAsyncLoader():
+class PixbufAsyncLoader(object):
     def __on_stream_read(self, stream, result):
         try:
             buf = stream.read_finish(result)
