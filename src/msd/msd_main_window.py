@@ -56,6 +56,12 @@ class MainWindow(object):
             self.__append_server_list_row(list_store, server)
         return list_store
 
+    def __update_sort_caps (self, view, server):
+        view.get_column(0).set_clickable (server.has_sort_capability("DisplayName"))
+        view.get_column(1).set_clickable (server.has_sort_capability("Date"))
+        view.get_column(2).set_clickable (server.has_sort_capability("Type"))
+        view.get_column(3).set_clickable (server.has_sort_capability("Artist"))
+
     def __change_server(self, page, sel):
         model, row = sel.get_selected()
         if row != None:
@@ -68,11 +74,13 @@ class MainWindow(object):
                                                 self.__videos.get_active(),
                                                 self.__music.get_active(),
                                                 self.__sort_order)
+                    self.__update_sort_caps (self.__search_view, server)
                     self.__search_view.set_model(search_model)
                     self.__search_path = server.path
             elif self.__browse_path != server.path:
                 browse_model = BrowseModel(Container(server.path),
                                            self.__sort_order)
+                self.__update_sort_caps (self.__browse_view, server)
                 self.__browse_view.set_model(browse_model)
                 self.__browse_path = server.path
 
@@ -209,7 +217,6 @@ class MainWindow(object):
         self.__create_column(treeview, "Type", 3, 75, "Type")
         self.__create_column(treeview, "Author", 1, 100, "Artist")
 
-        treeview.set_headers_clickable(True)
         treeview.set_rules_hint(True)
 
         scrollwin = Gtk.ScrolledWindow()
