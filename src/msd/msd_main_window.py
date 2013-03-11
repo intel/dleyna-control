@@ -44,38 +44,37 @@ class MainWindow(object):
             self.__overlay.cancel_playback()
         Gtk.main_quit()
 
-    def __append_server_list_row(self, list_store, key, value):
-        name, image = value
-        if image:
-            image = image.get_pixbuf()
+    def __append_server_list_row(self, list_store, server):
+        if server.icon:
+            image = server.icon.get_pixbuf()
             image = image.scale_simple(32, 32, GdkPixbuf.InterpType.BILINEAR)
-        return list_store.append([image, name, key])
+        return list_store.append([image, server.name, server])
 
     def __create_server_list_store(self):
-        list_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
-        for key, value in self.__state.get_server_list().iteritems():
-            self.__append_server_list_row(list_store, key, value)
+        list_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, GObject.TYPE_PYOBJECT)
+        for server in self.__state.get_server_list().itervalues():
+            self.__append_server_list_row(list_store, server)
         return list_store
 
     def __change_server(self, page, sel):
         model, row = sel.get_selected()
         if row != None:
-            path = model.get_value(row, 2)
+            server = model.get_value(row, 2)
             if page == 0:
-                if self.__search_path != path:
-                    search_model =  SearchModel(Container(path),
+                if self.__search_path != server.path:
+                    search_model =  SearchModel(Container(server.path),
                                                 self.__search_entry.get_text(),
                                                 self.__images.get_active(),
                                                 self.__videos.get_active(),
                                                 self.__music.get_active(),
                                                 self.__sort_order)
                     self.__search_view.set_model(search_model)
-                    self.__search_path = path
-            elif self.__browse_path != path:
-                browse_model = BrowseModel(Container(path),
+                    self.__search_path = server.path
+            elif self.__browse_path != server.path:
+                browse_model = BrowseModel(Container(server.path),
                                            self.__sort_order)
                 self.__browse_view.set_model(browse_model)
-                self.__browse_path = path
+                self.__browse_path = server.path
 
     def __server_selected(self, sel):
         page = self.__notebook.get_current_page()
@@ -298,14 +297,14 @@ class MainWindow(object):
 
     def __found_server(self, path):
         liststore = self.__server_view.get_model()
-        value = self.__state.get_server_list()[path]
-        rowref = self.__append_server_list_row(liststore, path, value)
+        server = self.__state.get_server_list()[path]
+        rowref = self.__append_server_list_row(liststore, server)
         self.__select_server(rowref)
 
     def __lost_server(self, path):
         liststore = self.__server_view.get_model()
         rowref = liststore.get_iter_first()
-        while rowref and liststore.get_value(rowref, 2) != path:
+        while rowref and liststore.get_value(rowref, 2).path != path:
             rowref = liststore.iter_next(rowref)
         if rowref:
             path_to_delete = liststore.get_path(rowref)
