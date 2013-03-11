@@ -257,6 +257,7 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
             self.__start_fetch (start, end - start + 1)
 
     def flush(self):
+        self.__request_range = [-1, -1]
         self.__items.set_length(0 + self.__static_items)
         self.set_request_range(0, GenericModel.max_items_per_fetch - 1)
 
