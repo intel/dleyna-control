@@ -231,7 +231,7 @@ class PlayWindowAudio(GStreamerWindow):
 
         if album_art_url:
             try:
-                PixbufAsyncLoader(url, self.__on_pixbuf_loaded)
+                PixbufAsyncLoader(album_art_url, self.__on_pixbuf_loaded)
                 self.__pixbuf = None
                 self.drawing_area.connect("expose-event", self.__draw)
             except Exception:
