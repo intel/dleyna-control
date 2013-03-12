@@ -71,6 +71,8 @@ class State(object):
         for path in servers:
             try:
                 self.__servers[path] = State.__create_server_tuple(path)
+                if self.__found_server_cb:
+                    self.__found_server_cb(path)
             except Exception:
                 pass
 
