@@ -20,7 +20,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gdk, GdkPixbuf, Gtk
+from gi.repository import GdkPixbuf, Gtk
 import dbus
 import dbus.service
 import dbus.mainloop.glib
@@ -44,12 +44,20 @@ class MainWindow(object):
             self.__overlay.cancel_playback()
         Gtk.main_quit()
 
+    def __on_pixbuf_loaded(self, pixbuf, path):
+        liststore = self.__server_view.get_model()
+        for row in liststore:
+            if path == row[2]:
+                row[0] = pixbuf.scale_simple (32, 32,
+                                              GdkPixbuf.InterpType.BILINEAR)
+                break
+
     def __append_server_list_row(self, list_store, key, value):
-        name, image = value
-        if image:
-            image = image.get_pixbuf()
-            image = image.scale_simple(32, 32, GdkPixbuf.InterpType.BILINEAR)
-        return list_store.append([image, name, key])
+        name, url = value
+
+        tree_iter = list_store.append([None, name, key])
+        PixbufAsyncLoader(url, self.__on_pixbuf_loaded, key)
+        return tree_iter
 
     def __create_server_list_store(self):
         list_store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
@@ -97,6 +105,7 @@ class MainWindow(object):
         column = Gtk.TreeViewColumn()
         column.set_title("Servers")
         renderer = Gtk.CellRendererPixbuf()
+        renderer.set_fixed_size(32, 32)
         column.pack_start(renderer, False)
         column.add_attribute(renderer, 'pixbuf', 0)
         renderer = Gtk.CellRendererText()
