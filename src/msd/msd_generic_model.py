@@ -21,8 +21,8 @@
 
 # This is a base class for SearchModel and BrowseModel:
 # They need to implement:
-#     def fetch_items(self)
-# which needs to make sure on_reply() or on_error() is called.
+#     def _fetch_items(self, start, count)
+# which needs to make sure _on_reply() or _on_error() is called.
 
 import pygtk
 pygtk.require('2.0')
@@ -179,12 +179,15 @@ class GenericModel(gtk.GenericTreeModel):
         self.__fetch_in_progress = False
         print "Fetch failed: %s" % error
 
+    def _fetch_items(self, start, count):
+        raise NotImplementedError
+
     def __do_fetch (self):
         start = self.__request_start + self.__result_count
         count = min(self.__request_count - self.__result_count,
                     GenericModel.max_items_per_fetch)
         # call virtual function, implemented by subclasses 
-        self.fetch_items(start, count)
+        self._fetch_items(start, count)
 
     def __start_fetch(self, start, count):
         self.__fetch_in_progress = True

@@ -58,7 +58,7 @@ class SearchModel(GenericModel):
 
         return search_string
 
-    def fetch_items(self, start, count):
+    def _fetch_items(self, start, count):
         self.__root.search(self.__search_string,
                            start, count,
                            GenericModel.filter,
