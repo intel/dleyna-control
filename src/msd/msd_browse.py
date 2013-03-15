@@ -58,7 +58,7 @@ class BrowseModel(GenericModel):
     def __on_browse_reply (self, result):
         self._on_reply(result, self.__child_count)
 
-    def fetch_items(self, start, count):
+    def _fetch_items(self, start, count):
         sort_descriptor = self.__sort_order.get_upnp_sort_order()
         self.__root.list_children(start, count,
                                   GenericModel.filter,
