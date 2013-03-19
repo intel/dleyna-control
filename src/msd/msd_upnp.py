@@ -69,17 +69,12 @@ class State(object):
 
     def __on_get_servers_reply (self, servers):
         for path in servers:
-            try:
-                self.__servers[path] = State.__create_server_tuple(path)
-                if self.__found_server_cb:
-                    self.__found_server_cb(path)
-            except Exception:
-                pass
+            self.__found_server(path)
 
     def __on_get_servers_error (self, error):
         print "Manager.GetServers() failed: %s" % error
 
-    def found_server(self, path):
+    def __found_server(self, path):
         if not path in self.__servers:
             try:
                 self.__servers[path] = State.__create_server_tuple(path)
@@ -88,7 +83,7 @@ class State(object):
             finally:
                 pass
 
-    def lost_server(self, path):
+    def __lost_server(self, path):
         if path in self.__servers:
             del self.__servers[path]
             if self.__lost_server_cb:
@@ -103,8 +98,8 @@ class State(object):
         self.__found_server_cb = None
         self.__lost_server_cb = None
 
-        self.__manager.connect_to_signal("FoundServer", self.found_server)
-        self.__manager.connect_to_signal("LostServer", self.lost_server)
+        self.__manager.connect_to_signal("FoundServer", self.__found_server)
+        self.__manager.connect_to_signal("LostServer", self.__lost_server)
         self.__manager.GetServers(reply_handler=self.__on_get_servers_reply,
                                   error_handler=self.__on_get_servers_error)
 
