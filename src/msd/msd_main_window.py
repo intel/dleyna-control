@@ -287,7 +287,7 @@ class MainWindow(object):
 
     def __create_window(self):
         window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
-        window.set_title("Media Service Demo")
+        window.set_title("dLeyna-control")
         window.set_resizable(True)
         window.set_default_size(640, 480)
         window.connect("delete_event", self.delete_event)
