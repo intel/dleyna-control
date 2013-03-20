@@ -90,11 +90,15 @@ class PlayWindowBase(object):
 
 class PlayWindowImage(PlayWindowBase):
 
+    def __on_pixbuf_loaded(self, pixbuf, userdata):
+        self.__pixbuf = pixbuf
+        self.drawing_area.queue_draw ()
+
     def __init__(self, name, url, close_window):
         PlayWindowBase.__init__(self, name, url, close_window)
         try:
-            image = image_from_file(url)
-            self.__image = image.get_pixbuf()
+            self.__pixbuf = None
+            PixbufAsyncLoader(url, self.__on_pixbuf_loaded)
             self.drawing_area.connect("draw", self.__draw)
         except Exception:
             pass
@@ -102,8 +106,8 @@ class PlayWindowImage(PlayWindowBase):
         self.get_container().show_all()
 
     def __draw(self, widget, context):
-        if self.__image:
-            self.draw_image(self.__image, context)
+        if self.__pixbuf:
+            self.draw_image(self.__pixbuf, context)
         return True
 
 class GStreamerWindow(PlayWindowBase):
@@ -217,20 +221,24 @@ class GStreamerWindow(PlayWindowBase):
 
 class PlayWindowAudio(GStreamerWindow):
 
+    def __on_pixbuf_loaded(self, pixbuf, userdata):
+        self.__pixbuf = pixbuf
+        self.drawing_area.queue_draw ()
+
     def __init__(self, name, url, album_art_url, close_window):
         GStreamerWindow.__init__(self, name, url, close_window)
 
         if album_art_url:
             try:
-                image = image_from_file(album_art_url)
-                self.__image = image.get_pixbuf()
+                self.__pixbuf = None
+                PixbufAsyncLoader(album_art_url, self.__on_pixbuf_loaded)
                 self.drawing_area.connect("draw", self.__draw)
             except Exception:
                 pass
 
     def __draw(self, widget, context):
-        if self.__image:
-            self.draw_image(self.__image, context)
+        if self.__pixbuf:
+            self.draw_image(self.__pixbuf, context)
         return True
 
 class PlayWindowVideo(GStreamerWindow):

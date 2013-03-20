@@ -16,26 +16,33 @@
 # 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Mark Ryan <mark.d.ryan@intel.com>
+# Jussi Kukkonen <jussi.kukkonen@intel.com>
 #
 
-import tempfile
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-import urllib2
-import os
+from gi.repository import GdkPixbuf, Gio
 
-def image_from_file(url):
-    tmpfile = tempfile.NamedTemporaryFile(delete=False)
-    tmpFileName = tmpfile.name
-    image = None
-    try:
-        with tmpfile:
-            message = urllib2.urlopen(url, None, 15)
-            tmpfile.write(message.read())
-        image = Gtk.Image()
-        image.set_from_file(tmpfile.name)
-    finally:
-        os.unlink(tmpFileName)
+# Loads a pixbuf from given url, calls callback() when pixbuf is ready.
+# This should ideally be implemented by calling GFile.read_async() and
+# then GInputStream.read_async() multiple times, feeding the data to
+# PixbufLoader gradually. Unfortunately GInputStream API is not fully
+# usable through gobject-introspection yet.
+class PixbufAsyncLoader(object):
+    def __on_load_contents(self, image_file, result, userdata):
+        try:
+            success, buf, etag = image_file.load_contents_finish(result)
+            if success:
+                loader = GdkPixbuf.PixbufLoader()
+                loader.write(buf)
+                loader.close()
+                self.__callback (loader.get_pixbuf(), userdata)
+        except Exception as err:
+            print "Failed to load image %s: %s" % (image_file.get_uri(),
+                                                   err)
 
-    return image
+    def __init__(self, url, callback, userdata=None):
+        self.__callback = callback
+        img_file = Gio.File.new_for_uri(url)
+        img_file.load_contents_async(None, self.__on_load_contents,
+                                     userdata)
