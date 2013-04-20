@@ -126,6 +126,18 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
                 item.get('URLs', [None])[0],
                 True]
 
+    # these two methods exist to work-around
+    # https://bugzilla.gnome.org/show_bug.cgi?id=698366
+    @staticmethod
+    def __get_row_index (tree_iter):
+        if (tree_iter.user_data == None):
+            return None
+        return tree_iter.user_data - 1
+
+    @staticmethod
+    def __set_row_index (tree_iter, index):
+        tree_iter.user_data = index + 1
+
     def _set_static_row(self, item):
         if(len(self.__items)) > 0:
             # Not handling situations where the model is populated already
@@ -276,7 +288,7 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
         if len(self.__items) > 0 and path[0] < len(self.__items):
             tree_iter = Gtk.TreeIter()
             tree_iter.stamp = self.__stamp
-            tree_iter.user_data = path[0]
+            self.__set_row_index (tree_iter, path[0])
             return (True, tree_iter)
         else:
             return (False, None)
@@ -284,28 +296,30 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
     def do_get_path(self, tree_iter):
         if tree_iter.user_data is None:
             return Gtk.TreePath((None,))
-        return Gtk.TreePath((tree_iter.user_data,))
+        return Gtk.TreePath((self.__get_row_index(tree_iter),))
 
     def do_get_value(self, tree_iter, col):
         try:
+            index = self.__get_row_index(tree_iter)
             if (col == self.COL_LOADED):
-                return bool(self.__items[tree_iter.user_data][col])
-            elif self.__items[tree_iter.user_data][col] == None:
+                return bool(self.__items[index][col])
+            elif self.__items[index][col] == None:
                 return ""
             else:
-                return self.__items[tree_iter.user_data][col].encode('utf-8')
+                return self.__items[index][col].encode('utf-8')
         except KeyError:
             return None
 
     def do_iter_next(self, tree_iter):
         length = len(self.__items)
-        if tree_iter.user_data is None and length > 0:
+        index = self.__get_row_index(tree_iter)
+        if index is None and length > 0:
             # return iter to first row
-            tree_iter.user_data = 0
+            self.__set_row_index(tree_iter, 0)
             return (True, tree_iter)
-        elif tree_iter.user_data < length - 1:
+        elif index != None and index < length - 1:
             # return iter to next row
-            tree_iter.user_data += 1
+            self.__set_row_index(tree_iter, index + 1)
             return (True, tree_iter)
         else:
             return (False, None)
@@ -324,7 +338,7 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
             return (False, None)
         tree_iter = Gtk.TreeIter()
         tree_iter.stamp = self.__stamp
-        tree_iter.user_data = n
+        self.__set_row_index(tree_iter, n)
         return (True, tree_iter)
 
     def do_iter_parent(self, child_iter):
