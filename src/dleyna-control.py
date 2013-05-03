@@ -27,10 +27,13 @@ from gi.repository import GObject, Gtk, Gst
 import dbus
 import dbus.service
 import dbus.mainloop.glib
+import signal
 
 from msd.msd_main_window import *
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     GObject.threads_init()
     Gst.init(None)
     try:
