@@ -39,7 +39,7 @@ class SearchModel(GenericModel):
                     q_buffer.write('(Artist contains "{0}"\
  or DisplayName contains "{0}")'.format(query))
                     q_buffer.write(' and ')
-                q_buffer.write(' ( ')
+                q_buffer.write('( ')
                 if images:
                     q_buffer.write('Type derivedfrom "image" ')
                 if videos:
@@ -59,11 +59,14 @@ class SearchModel(GenericModel):
         return search_string
 
     def _fetch_items(self, start, count):
-        self.__root.search(self.__search_string,
-                           start, count,
-                           GenericModel.filter,
-                           self.__sort_order.get_upnp_sort_order(),
-                           self._on_reply, self._on_error)
+        if len(self.__search_string) > 0:
+            self.__root.search(self.__search_string,
+                               start, count,
+                               GenericModel.filter,
+                               self.__sort_order.get_upnp_sort_order(),
+                               self._on_reply, self._on_error)
+        else:
+            self._on_reply([], 0)
 
     def __init__(self, root, query, images, videos, music, sort_order):
         super(SearchModel, self).__init__()
