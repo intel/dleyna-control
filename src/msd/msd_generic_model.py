@@ -130,8 +130,10 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
     # https://bugzilla.gnome.org/show_bug.cgi?id=698366
     @staticmethod
     def __get_row_index (tree_iter):
-        if (tree_iter.user_data == None):
-            return None
+        # Handle the error case of user_data being not set
+        # (0 or None depending on gobject-introspection version)
+        if (tree_iter.user_data <= 0):
+            return 0
         return tree_iter.user_data - 1
 
     @staticmethod
@@ -294,8 +296,6 @@ class GenericModel(GObject.GObject, Gtk.TreeModel):
             return (False, None)
 
     def do_get_path(self, tree_iter):
-        if tree_iter.user_data is None:
-            return Gtk.TreePath((None,))
         return Gtk.TreePath((self.__get_row_index(tree_iter),))
 
     def do_get_value(self, tree_iter, col):
