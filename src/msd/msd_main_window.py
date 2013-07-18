@@ -45,6 +45,7 @@ class MainWindow(object):
         Gtk.main_quit()
 
     def __append_server_list_row(self, list_store, server):
+        image = None
         if server.icon:
             image = server.icon.get_pixbuf()
             image = image.scale_simple(32, 32, GdkPixbuf.InterpType.BILINEAR)
