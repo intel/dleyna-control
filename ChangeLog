@@ -1,3 +1,10 @@
+version 0.2.0
+	- Accept content type "Music"
+	- Partial fix for bug #38 - dleyna control crash
+	  https://github.com/01org/dleyna-control/issues/38
+	- Set path to "0" if iterator is not set
+	- Fix for servers that do not supply icons
+
 version 0.1.0
 	- Prepare for first stable branch
 	
