@@ -30,10 +30,10 @@ class MSDInstallData(install_data):
         install_data.finalize_options(self)
 
 setup(name = "msd",
-      version = "0.2.1",
+      version = "0.3.0",
       description = "Test DMP to demonstrate features of dleyna-server",
-      author = "Mark Ryan",
-      author_email = "mark.d.ryan@intel.com",
+      author = "Richard S. Bell",
+      author_email = "richard.s.bell@intel.com",
       url = "https://01.org/dleyna/about",
       license = "http://www.gnu.org/licenses/lgpl-2.1.html",
       scripts = ['src/dleyna-control.py'],

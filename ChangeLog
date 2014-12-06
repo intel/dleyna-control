@@ -1,3 +1,6 @@
+version 0.3.0
+	- Change publish_object() signature
+
 version 0.2.0
 	- Accept content type "Music"
 	- Partial fix for bug #38 - dleyna control crash
