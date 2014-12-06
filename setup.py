@@ -30,7 +30,7 @@ class MSDInstallData(install_data):
         install_data.finalize_options(self)
 
 setup(name = "msd",
-      version = "0.3.0",
+      version = "0.4.0",
       description = "Test DMP to demonstrate features of dleyna-server",
       author = "Richard S. Bell",
       author_email = "richard.s.bell@intel.com",
