@@ -25,7 +25,9 @@ except Exception, e:
   print e;
   pass
 
-if len(sys.argv) >= 1:
-  print "launching " + sys.argv[1];
-  call([sys.argv[1]]);
+if len(sys.argv) > 1:
+  print "launching ",
+  print sys.argv[1:];
+
+  call(sys.argv[1:]);
 
