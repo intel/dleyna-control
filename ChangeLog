@@ -1,10 +1,10 @@
 version 0.3.0
+	- Change publish_object() signature
 	- script to launch app without proxy setting
 	- allow for command line args
 	- Changed the Copyright to 2017
 
 version 0.2.0
-	- Change publish_object() signature
 	- Accept content type "Music"
 	- Partial fix for bug #38 - dleyna control crash
 	  https://github.com/01org/dleyna-control/issues/38
